@@ -20,7 +20,7 @@ makeCacheMatrix <- function(x = matrix()) {
   get <- function() x
   setInverse <- function(y) x_inv <<- y
   getInverse <- function() {
-    if(exists("x_inv")){ return(x_inv) }
+    if(!is.null(x_inv)){ return(x_inv) }
     else{ stop("The inverse hasn't been calculated yet!") }
   }
   cm <- list(set = set, get = get,
@@ -34,14 +34,22 @@ makeCacheMatrix <- function(x = matrix()) {
 # - It checks to see if the inverse has already been calculated. 
 #    * If so, it returns the inverse from the cache. 
 #    * Otherwise, it computes the inverse of the matrix and caches it
-#       via the setInverse function.
+#       via the setInverse function:
+#        - If solve returns error, matrix is not invertible,
+#            so return correctly-sized matrix of NA's.
 
 cacheSolve <- function(x, ...) {
   # Return a matrix that is the inverse of 'x'
   inv <- try(x$getInverse(), silent=TRUE)
   if(inherits(inv,"try-error") || is.null(inv)){
     message("Calculating inverse...")
-    (x$setInverse(solve(x$get()))) # r shorthand for setting and returning
+    m <- x$get()
+    calc_inv <- try(solve(m))
+    if(inherits(calc_inv,"try-error")){
+      message("The matrix is not invertible... setting to NA.")
+      calc_inv <- matrix(data=NA, nrow=nrow(m), ncol=ncol(m))
+    }
+    (x$setInverse(calc_inv)) # r shorthand () sets and returns the matrix
   }
   else{
     message("Getting cached inverse...")
