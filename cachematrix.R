@@ -1,24 +1,32 @@
 # Function makeCacheMatrix: construct object of class 'CacheMatrix' from input.
 #    First, check to ensure that input x is a square matrix (and error if not).
 #    Then, define:
-#      * The set method (assigns a matrix to x and resets x_inv, each of which is
-#            inherited by CacheMatrix)
-#      * The method setInverse (which assigns a matrix to x_inv)
-#      * The accessor method get (returns x, i.e. the input to constructor)
-#      * The accessor method getInverse (returns x_inv)
+#      * The set method 
+#      * The setInverse method
+#      * The accessor method get
+#      * The accessor method getInverse
 
 makeCacheMatrix <- function(x = matrix()) {
+  
   # Ensure that the input is a square matrix.
   if(!is.matrix(x) || nrow(x) != ncol(x)){
     stop("Argument must be a square matrix!")
   }
   x_inv <- NULL
+  
+  # Set the value of the matrix: assign a matrix to x, reset x_inv
   set <- function(y) {
     x <<- y
     x_inv <<- NULL
   }
+  
+  # Get the matrix x  (i.e. the input to constructor)
   get <- function() x
+  
+  # Set the inverse of the matrix (assigns a matrix to x_inv)
   setInverse <- function(y) x_inv <<- y
+  
+  # Get the inverse of the matrix (returns x_inv) 
   getInverse <- function() {
     if(!is.null(x_inv)){ return(x_inv) }
     else{ stop("The inverse hasn't been calculated yet!") }
@@ -26,9 +34,13 @@ makeCacheMatrix <- function(x = matrix()) {
   cm <- list(set = set, get = get,
              setInverse = setInverse,
              getInverse = getInverse)
+  
+  # Give the instance a class name
   class(cm) <- "CacheMatrix"
   return(cm)
 }
+
+
 
 # Function cacheSolve: returns the inverse of the CacheMatrix.
 # - It checks to see if the inverse has already been calculated. 
@@ -39,19 +51,21 @@ makeCacheMatrix <- function(x = matrix()) {
 #            so return correctly-sized matrix of NA's.
 
 cacheSolve <- function(x, ...) {
-  # Return a matrix that is the inverse of 'x'
+
   inv <- try(x$getInverse(), silent=TRUE)
-  if(inherits(inv,"try-error") || is.null(inv)){
+  
+  # Check to see whether inverse has already been set
+  if(inherits(inv,"try-error") || is.null(inv)){ # inverse not yet set
     message("Calculating inverse...")
-    m <- x$get()
-    calc_inv <- try(solve(m))
-    if(inherits(calc_inv,"try-error")){
+    m <- x$get() 
+    calc_inv <- try(solve(m)) # try calculating the inverse
+    if(inherits(calc_inv,"try-error")){ 
       message("The matrix is not invertible... setting to NA.")
       calc_inv <- matrix(data=NA, nrow=nrow(m), ncol=ncol(m))
     }
     (x$setInverse(calc_inv)) # r shorthand () sets and returns the matrix
   }
-  else{
+  else{ # inverse has already been set
     message("Getting cached inverse...")
     return(inv)
   }
